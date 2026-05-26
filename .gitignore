@@ -1,0 +1,26 @@
+# ── Compilación NetBeans / Ant ─────────────────────────
+build/
+dist/
+build.xml
+nbproject/build-impl.xml
+nbproject/ant-deploy.xml
+nbproject/genfiles.properties
+nbproject/private/
+
+# ── Variables de entorno ────────────────────────────────
+.env
+.env.*
+
+# ── Claude Code (contexto e IA) ─────────────────────────
+.claude/
+MEMORY.md
+*.context.md
+
+# ── Mac OS ─────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ── IDE varios ─────────────────────────────────────────
+*.iml
+.idea/
+.vscode/settings.json

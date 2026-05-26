@@ -1,0 +1,121 @@
+
+/* ===== SECCIÓN ===== */
+.about {
+  background: rgb(229,232,255);
+  padding: 80px 20px;
+}
+
+.about-container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* HEADER */
+.about-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #007bff, #7b2ff7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* MISIÓN / VISIÓN */
+.about-mv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 60px;
+}
+
+.card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 20px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.mv-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+/* VALORES */
+.values-section {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-title {
+  margin-bottom: 30px;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.value-card {
+  text-align: center;
+}
+
+.value-card .icon {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+/* WHY */
+.why {
+  background: #fff;
+  padding: 30px;
+  border-radius: 20px;
+  transition: 0.3s;
+}
+
+.why:hover {
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.why h3 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ITEMS */
+.why-item {
+  padding: 20px;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+
+/* HOVER POR COLOR */
+.why-item.blue:hover {
+  background: rgba(0,123,255,0.1);
+}
+
+.why-item.purple:hover {
+  background: rgba(123,47,247,0.1);
+}
+
+.why-item.green:hover {
+  background: rgba(40,167,69,0.1);
+}
+
+.why-item.orange:hover {
+  background: rgba(255,140,0,0.1);
+}
