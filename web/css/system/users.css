@@ -77,6 +77,14 @@
   background: linear-gradient(90deg, #ff4d4d, #ff7b00);
 }
 
+.stat-card.income {
+  background: linear-gradient(90deg, #059669, #06b6d4);
+}
+
+.stat-card.monthly {
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+}
+
 /* FILTROS */
 .users-filters {
   display: flex;

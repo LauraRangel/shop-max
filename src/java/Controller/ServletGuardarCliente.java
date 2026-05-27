@@ -15,6 +15,16 @@ public class ServletGuardarCliente extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("nombre") == null) {
+            response.sendRedirect("login");
+            return;
+        }
+        String rol = (String) session.getAttribute("rol");
+        if (!"Administrador".equals(rol) && !"Gerente de Tienda".equals(rol)) {
+            response.sendRedirect("dashboard?mod=clientes");
+            return;
+        }
         try {
             Cliente c = new Cliente();
             c.setNombre(request.getParameter("nombre"));
