@@ -3,22 +3,23 @@
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.time.LocalDate"%>
 
-<%-- vistas/clientes.jsp — pendiente --%>
-
 <%
   ArrayList<HashMap<String,String>> clientes =
       (ArrayList<HashMap<String,String>>) request.getAttribute("clientes");
 
-  int total   = clientes != null ? clientes.size() : 0;
+  int total = clientes != null ? clientes.size() : 0;
+  boolean puedeGestionar = esAdmin || esGerente;
 %>
 
 <div class="users-header">
   <h2 class="gradient-text">
     <i class="fa-solid fa-users"></i> Gestión de Clientes
   </h2>
+  <% if (puedeGestionar) { %>
   <button class="btn-add-user" onclick="abrirModal()">
     <i class="fa-solid fa-plus"></i> Agregar Cliente
   </button>
+  <% } %>
 </div>
 
 <div class="users-stats">
@@ -27,19 +28,19 @@
     <h3><%= total %></h3>
   </div>
 </div>
-  
+
 <div class="users-filters">
   <div class="search-box">
     <i class="fa fa-search"></i>
-    <input type="text" id="searchCustomer" placeholder="Buscar clientes..." oninput="filtrarClientes()">
+    <input type="text" id="searchCustomer" placeholder="Buscar por nombre o documento..." oninput="filtrarClientes()">
   </div>
 </div>
-  
+
 <div class="users-grid" id="usersGrid">
   <% if (clientes != null) {
        for (HashMap<String,String> u : clientes) {
-         String letra       = u.get("nombre") != null && !u.get("nombre").isEmpty()
-                              ? String.valueOf(u.get("nombre").charAt(0)).toUpperCase() : "?";
+         String letra = u.get("nombre") != null && !u.get("nombre").isEmpty()
+                        ? String.valueOf(u.get("nombre").charAt(0)).toUpperCase() : "?";
   %>
   <div class="user-card"
        data-nombre="<%= u.get("nombre").toLowerCase() %>"
@@ -55,17 +56,18 @@
     <div class="user-info" style="margin-top:8px">
       <p><i class="fa-solid fa-envelope"></i> <%= u.get("email") %></p>
       <p><i class="fa-solid fa-phone"></i> <%= u.get("telefono") %></p>
-      <p><i class="fa-solid fa-address-card"></i> <%= u.get("documento") %></p>
+      <p><i class="fa-solid fa-address-card"></i> DNI: <%= u.get("documento") %></p>
       <p><i class="fa-solid fa-calendar-days"></i> <%= u.get("fecha_registro") %></p>
     </div>
-    
+
+    <% if (puedeGestionar) { %>
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-      <button onclick="abrirModalEditar('<%= u.get("id") %>','<%= u.get("nombre") %>','<%= u.get("email") %>','<%= u.get("telefono") %>','<%= u.get("documento") %>','<%= u.get("fecha_registro") %>')"
+      <button onclick="abrirModalEditar('<%= u.get("id") %>','<%= u.get("nombre") %>','<%= u.get("email") %>','<%= u.get("telefono") %>','<%= u.get("documento") %>')"
               style="background:none;border:1px solid #007bff;color:#007bff;
                      padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
         <i class="fa-solid fa-pen"></i> Editar
       </button>
-      
+
       <form method="POST" action="EliminarCliente" style="display:inline"
             onsubmit="return confirm('¿Eliminar a <%= u.get("nombre") %>?')">
         <input type="hidden" name="id" value="<%= u.get("id") %>">
@@ -75,30 +77,43 @@
           <i class="fa-solid fa-trash"></i> Eliminar
         </button>
       </form>
-
     </div>
+    <% } %>
   </div>
   <% } } %>
 </div>
 
+<div id="sinResultados" style="display:none;text-align:center;color:#aaa;padding:40px">
+  <i class="fa-solid fa-magnifying-glass" style="font-size:2rem;margin-bottom:8px"></i>
+  <p>No se encontraron clientes</p>
+</div>
+
+<% if (puedeGestionar) { %>
+<!-- Modal: Agregar Cliente -->
 <div class="modal-overlay" id="customerModal">
   <div class="modal">
-    <form method="POST" action="ServletMantenimientoCliente">
+    <form method="POST" action="ServletMantenimientoCliente" onsubmit="return validarFormCliente('customerModal')">
       <h2>Agregar Cliente</h2>
 
-      <label>Nombre de Cliente</label>
-      <input type="text" name="nombre" placeholder="Ingrese nombre" required>
+      <label>Nombre</label>
+      <input type="text" name="nombre" placeholder="Ingrese nombre completo" required>
 
       <label>Email</label>
-      <input type="email" name="email" placeholder="Ingrese email" required>
+      <input type="email" name="email" placeholder="ejemplo@correo.com" required>
 
-      <label>Telefono</label>
-      <input type="text" name="telefono" placeholder="Ingrese telefono" required>
-      
-      <label>Documento</label>
-      <input type="text" name="documento" placeholder="Ingrese su número de documento" required>
+      <label>Teléfono <small style="color:#aaa">(9 dígitos)</small></label>
+      <input type="text" name="telefono" id="telefonoAdd"
+             placeholder="999999999"
+             maxlength="9" pattern="[0-9]{9}"
+             title="El teléfono debe tener exactamente 9 dígitos" required>
 
-      <input type="hidden" name="fecha_registro" value="<%= LocalDate.now() %>" readonly>
+      <label>DNI <small style="color:#aaa">(8 dígitos)</small></label>
+      <input type="text" name="documento" id="documentoAdd"
+             placeholder="12345678"
+             maxlength="8" pattern="[0-9]{8}"
+             title="El DNI debe tener exactamente 8 dígitos" required>
+
+      <input type="hidden" name="fecha_registro" value="<%= LocalDate.now() %>">
 
       <div class="modal-buttons">
         <button type="submit" class="btn-save">Agregar</button>
@@ -108,9 +123,10 @@
   </div>
 </div>
 
+<!-- Modal: Editar Cliente -->
 <div class="modal-overlay" id="editModal">
   <div class="modal">
-    <form method="POST" action="EditarCliente">
+    <form method="POST" action="EditarCliente" onsubmit="return validarFormCliente('editModal')">
       <h2>Editar Cliente</h2>
       <input type="hidden" name="id" id="editId">
 
@@ -119,12 +135,16 @@
 
       <label>Email</label>
       <input type="email" name="email" id="editEmail" required>
-      
-      <label>Telefono</label>
-      <input type="text" name="telefono" id="editTelefono" required>
-      
-      <label>Documento</label>
-      <input type="text" name="documento" id="editDocumento" required>
+
+      <label>Teléfono <small style="color:#aaa">(9 dígitos)</small></label>
+      <input type="text" name="telefono" id="editTelefono"
+             maxlength="9" pattern="[0-9]{9}"
+             title="El teléfono debe tener exactamente 9 dígitos" required>
+
+      <label>DNI <small style="color:#aaa">(8 dígitos)</small></label>
+      <input type="text" name="documento" id="editDocumento"
+             maxlength="8" pattern="[0-9]{8}"
+             title="El DNI debe tener exactamente 8 dígitos" required>
 
       <div class="modal-buttons">
         <button type="submit" class="btn-save">Guardar</button>
@@ -133,58 +153,69 @@
     </form>
   </div>
 </div>
+<% } %>
 
-  <script>
-      function abrirModal() {
-        document.getElementById("customerModal").style.display = "flex";
-      }
-      
-      function cerrarModal() {
-        document.getElementById("customerModal").style.display = "none";
-      }
-      
-      document.getElementById("customerModal").addEventListener("click", function(e) {
-        if (e.target === this) cerrarModal();
-      });
-      
-      function abrirModalEditar(id, nombre, email, telefono, documento) {
-        document.getElementById("editId").value     = id;
-        document.getElementById("editNombre").value = nombre;
-        document.getElementById("editEmail").value = email;
-        document.getElementById("editTelefono").value  = telefono;
-        document.getElementById("editDocumento").value = documento;   
+<script>
+  <% if (puedeGestionar) { %>
+  function abrirModal() {
+    document.getElementById("customerModal").style.display = "flex";
+  }
+  function cerrarModal() {
+    document.getElementById("customerModal").style.display = "none";
+  }
+  document.getElementById("customerModal").addEventListener("click", function(e) {
+    if (e.target === this) cerrarModal();
+  });
 
-        document.getElementById("editModal").style.display = "flex";
-      }
-      
-      function cerrarModalEditar() {
-        document.getElementById("editModal").style.display = "none";
-      }
-      
-      document.getElementById("editModal").addEventListener("click", function(e) {
-        if (e.target === this) cerrarModalEditar();
-      });
-      
-      function filtrarClientes() {
-        const texto  = document.getElementById("searchCustomer").value.toLowerCase().trim();
-        const cards  = document.querySelectorAll("#usersGrid .user-card");
-        let visibles = 0;
+  function abrirModalEditar(id, nombre, email, telefono, documento) {
+    document.getElementById("editId").value        = id;
+    document.getElementById("editNombre").value    = nombre;
+    document.getElementById("editEmail").value     = email;
+    document.getElementById("editTelefono").value  = telefono;
+    document.getElementById("editDocumento").value = documento;
+    document.getElementById("editModal").style.display = "flex";
+  }
+  function cerrarModalEditar() {
+    document.getElementById("editModal").style.display = "none";
+  }
+  document.getElementById("editModal").addEventListener("click", function(e) {
+    if (e.target === this) cerrarModalEditar();
+  });
 
-        cards.forEach(function(card) {
-          const nombre   = card.dataset.nombre  || "";
-          const documento   = card.dataset.documento  || "";
+  function validarFormCliente(modalId) {
+    var modal    = document.getElementById(modalId);
+    var tel      = modal.querySelector("[name='telefono']");
+    var doc      = modal.querySelector("[name='documento']");
+    if (!/^[0-9]{9}$/.test(tel.value)) {
+      alert("El teléfono debe tener exactamente 9 dígitos numéricos.");
+      tel.focus(); return false;
+    }
+    if (!/^[0-9]{8}$/.test(doc.value)) {
+      alert("El DNI debe tener exactamente 8 dígitos numéricos.");
+      doc.focus(); return false;
+    }
+    return true;
+  }
 
-          const match = nombre.includes(texto) || documento.includes(texto);
+  // Solo permitir números en campos DNI y teléfono
+  document.querySelectorAll("[name='telefono'],[name='documento']").forEach(function(inp) {
+    inp.addEventListener("input", function() {
+      this.value = this.value.replace(/[^0-9]/g, "");
+    });
+  });
+  <% } %>
 
-          if (match) {
-            card.style.display = "block";
-            visibles++;
-          } else {
-            card.style.display = "none";
-          }
-        });
-
-        document.getElementById("sinResultados").style.display =
-          visibles === 0 ? "block" : "none";
-      }
-  </script>
+  function filtrarClientes() {
+    var texto    = document.getElementById("searchCustomer").value.toLowerCase().trim();
+    var cards    = document.querySelectorAll("#usersGrid .user-card");
+    var visibles = 0;
+    cards.forEach(function(card) {
+      var nombre    = card.dataset.nombre    || "";
+      var documento = card.dataset.documento || "";
+      var match     = nombre.includes(texto) || documento.includes(texto);
+      card.style.display = match ? "block" : "none";
+      if (match) visibles++;
+    });
+    document.getElementById("sinResultados").style.display = visibles === 0 ? "block" : "none";
+  }
+</script>

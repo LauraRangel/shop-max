@@ -1,10 +1,12 @@
 package Controller;
 
+import Entity.Cliente;
 import Model.ModelCliente;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.time.LocalDate;
 
 @WebServlet("/clientes")
 public class ServletClientes extends HttpServlet {
@@ -30,13 +32,14 @@ public class ServletClientes extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            String nombre = request.getParameter("nombre");
-            String email = request.getParameter("email");
-            String telefono = request.getParameter("telefono");
-            String documento = request.getParameter("documento");
+            Cliente c = new Cliente();
+            c.setNombre(request.getParameter("nombre"));
+            c.setEmail(request.getParameter("email"));
+            c.setTelefono(request.getParameter("telefono"));
+            c.setDocumento(request.getParameter("documento"));
+            c.setFecha_registro(LocalDate.now().toString());
 
-            ModelCliente model = new ModelCliente();
-            model.saveCliente(nombre, email, telefono, documento);
+            new ModelCliente().saveCliente(c);
         } catch (Exception e) {
             e.printStackTrace();
         }

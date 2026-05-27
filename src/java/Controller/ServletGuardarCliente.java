@@ -1,10 +1,12 @@
 package Controller;
 
+import Entity.Cliente;
 import Model.ModelCliente;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.time.LocalDate;
 
 @WebServlet("/ServletGuardarCliente")
 public class ServletGuardarCliente extends HttpServlet {
@@ -14,11 +16,13 @@ public class ServletGuardarCliente extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         try {
-            String nombre    = request.getParameter("nombre");
-            String email     = request.getParameter("email");
-            String telefono  = request.getParameter("telefono");
-            String documento = request.getParameter("documento");
-            new ModelCliente().saveCliente(nombre, email, telefono, documento);
+            Cliente c = new Cliente();
+            c.setNombre(request.getParameter("nombre"));
+            c.setEmail(request.getParameter("email"));
+            c.setTelefono(request.getParameter("telefono"));
+            c.setDocumento(request.getParameter("documento"));
+            c.setFecha_registro(LocalDate.now().toString());
+            new ModelCliente().saveCliente(c);
         } catch (Exception e) {
             e.printStackTrace();
         }
