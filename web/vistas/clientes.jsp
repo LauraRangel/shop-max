@@ -1,210 +1,221 @@
 <%@page pageEncoding="UTF-8"%>
-<%@page import="java.util.HashMap,java.util.ArrayList"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="java.time.LocalDate"%>
 
 <%
   ArrayList<HashMap<String,String>> clientes =
-      (ArrayList<HashMap<String,String>>) request.getAttribute("listaClientes");
-  if (clientes == null) clientes = new ArrayList<>();
+      (ArrayList<HashMap<String,String>>) request.getAttribute("clientes");
+
+  int total = clientes != null ? clientes.size() : 0;
+  boolean puedeGestionar = esAdmin || esGerente;
 %>
 
-<!-- HEADER -->
 <div class="users-header">
   <h2 class="gradient-text">
     <i class="fa-solid fa-users"></i> Gestión de Clientes
   </h2>
-  <button class="btn-add-user" onclick="abrirModalCliente()">
-    <i class="fa-solid fa-plus"></i> Nuevo Cliente
+  <% if (puedeGestionar) { %>
+  <button class="btn-add-user" onclick="abrirModal()">
+    <i class="fa-solid fa-plus"></i> Agregar Cliente
   </button>
+  <% } %>
 </div>
 
-<!-- STATS -->
 <div class="users-stats">
   <div class="stat-card total">
-    <p><i class="fa-solid fa-users"></i> Total Clientes</p>
-    <h3><%= clientes.size() %></h3>
-  </div>
-  <div class="stat-card active">
-    <p><i class="fa-solid fa-id-card"></i> Con Documento</p>
-    <h3><%
-      int conDoc = 0;
-      for (HashMap<String,String> c : clientes)
-        if (c.get("documento") != null && !c.get("documento").isEmpty()) conDoc++;
-      out.print(conDoc);
-    %></h3>
-  </div>
-  <div class="stat-card inactive">
-    <p><i class="fa-solid fa-calendar"></i> Registrados hoy</p>
-    <h3><%
-      String hoy = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
-      int hoyCount = 0;
-      for (HashMap<String,String> c : clientes)
-        if (hoy.equals(c.get("fecha"))) hoyCount++;
-      out.print(hoyCount);
-    %></h3>
+    <p>Total de Clientes</p>
+    <h3><%= total %></h3>
   </div>
 </div>
 
-<!-- FILTROS -->
 <div class="users-filters">
   <div class="search-box">
     <i class="fa fa-search"></i>
-    <input type="text" id="searchCliente" placeholder="Buscar por nombre, email o documento..." oninput="filtrarClientes()">
+    <input type="text" id="searchCustomer" placeholder="Buscar por nombre o documento..." oninput="filtrarClientes()">
   </div>
 </div>
 
-<!-- GRID DE TARJETAS -->
-<div class="users-grid" id="clientesGrid">
-  <% if (clientes.isEmpty()) { %>
-    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#999;">
-      <i class="fa-solid fa-inbox" style="font-size:48px;display:block;margin-bottom:16px;opacity:.4;"></i>
-      <p>No hay clientes registrados aún.</p>
-    </div>
-  <% } else { for (HashMap<String,String> c : clientes) {
-       String letra = (c.get("nombre") != null && !c.get("nombre").isEmpty())
-                      ? String.valueOf(c.get("nombre").charAt(0)).toUpperCase() : "?";
+<div class="users-grid" id="usersGrid">
+  <% if (clientes != null) {
+       for (HashMap<String,String> u : clientes) {
+         String letra = u.get("nombre") != null && !u.get("nombre").isEmpty()
+                        ? String.valueOf(u.get("nombre").charAt(0)).toUpperCase() : "?";
   %>
-    <div class="user-card"
-         data-nombre="<%= c.get("nombre") != null ? c.get("nombre").toLowerCase() : "" %>"
-         data-email="<%= c.get("email") != null ? c.get("email").toLowerCase() : "" %>"
-         data-doc="<%= c.get("documento") != null ? c.get("documento") : "" %>">
+  <div class="user-card"
+       data-nombre="<%= u.get("nombre").toLowerCase() %>"
+       data-documento="<%= u.get("documento") %>">
 
-      <div class="user-top">
-        <div class="avatar"><%= letra %></div>
-        <div class="user-info" style="flex:1;">
-          <strong><%= c.get("nombre") %></strong>
-          <small style="color:#888;">DNI/RUC: <%= c.get("documento") != null ? c.get("documento") : "—" %></small>
-        </div>
+    <div class="user-top">
+      <div class="avatar"><%= letra %></div>
+      <div class="user-info">
+        <strong><%= u.get("nombre") %></strong>
       </div>
+    </div>
 
-      <div class="user-info" style="margin-top:8px;">
-        <p><i class="fa-solid fa-envelope"></i> <%= c.get("email") != null ? c.get("email") : "—" %></p>
-        <p><i class="fa-solid fa-phone"></i> <%= c.get("telefono") != null ? c.get("telefono") : "—" %></p>
-        <p><i class="fa-solid fa-calendar-days"></i> Desde: <%= c.get("fecha") != null ? c.get("fecha") : "—" %></p>
-      </div>
+    <div class="user-info" style="margin-top:8px">
+      <p><i class="fa-solid fa-envelope"></i> <%= u.get("email") %></p>
+      <p><i class="fa-solid fa-phone"></i> <%= u.get("telefono") %></p>
+      <p><i class="fa-solid fa-address-card"></i> DNI: <%= u.get("documento") %></p>
+      <p><i class="fa-solid fa-calendar-days"></i> <%= u.get("fecha_registro") %></p>
+    </div>
 
-      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-        <button onclick="abrirModalEditarCliente('<%= c.get("id") %>','<%= c.get("nombre") %>','<%= c.get("email") %>','<%= c.get("telefono") %>','<%= c.get("documento") %>')"
-                style="background:none;border:1px solid #007bff;color:#007bff;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
-          <i class="fa-solid fa-pen"></i> Editar
-        </button>
-        <button onclick="confirmarEliminarCliente('<%= c.get("id") %>','<%= c.get("nombre") %>')"
-                style="background:none;border:1px solid #E24B4A;color:#E24B4A;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
+    <% if (puedeGestionar) { %>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button onclick="abrirModalEditar('<%= u.get("id") %>','<%= u.get("nombre") %>','<%= u.get("email") %>','<%= u.get("telefono") %>','<%= u.get("documento") %>')"
+              style="background:none;border:1px solid #007bff;color:#007bff;
+                     padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
+        <i class="fa-solid fa-pen"></i> Editar
+      </button>
+
+      <form method="POST" action="EliminarCliente" style="display:inline"
+            onsubmit="return confirm('¿Eliminar a <%= u.get("nombre") %>?')">
+        <input type="hidden" name="id" value="<%= u.get("id") %>">
+        <button type="submit"
+                style="background:none;border:1px solid #E24B4A;color:#E24B4A;
+                       padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
           <i class="fa-solid fa-trash"></i> Eliminar
         </button>
-      </div>
+      </form>
     </div>
-  <% }} %>
+    <% } %>
+  </div>
+  <% } } %>
 </div>
 
-<p id="sinClientes" style="display:none;text-align:center;color:#888;margin-top:30px;">No se encontraron clientes.</p>
+<div id="sinResultados" style="display:none;text-align:center;color:#aaa;padding:40px">
+  <i class="fa-solid fa-magnifying-glass" style="font-size:2rem;margin-bottom:8px"></i>
+  <p>No se encontraron clientes</p>
+</div>
 
-<!-- MODAL: AGREGAR CLIENTE -->
-<div class="modal-overlay" id="modalCliente">
-  <div class="modal" style="width:480px;">
-    <form method="POST" action="ServletGuardarCliente">
-      <h2><i class="fa-solid fa-user-plus" style="color:#007bff;"></i> Nuevo Cliente</h2>
+<% if (puedeGestionar) { %>
+<!-- Modal: Agregar Cliente -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal">
+    <form method="POST" action="ServletMantenimientoCliente" onsubmit="return validarFormCliente('customerModal')">
+      <h2>Agregar Cliente</h2>
 
-      <label>Nombre completo *</label>
-      <input type="text" name="nombre" placeholder="Ej: Juan Pérez García" required maxlength="150">
+      <label>Nombre</label>
+      <input type="text" name="nombre" placeholder="Ingrese nombre completo" required>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label>DNI / Documento *</label>
-          <input type="text" name="documento" placeholder="12345678" required maxlength="20">
-        </div>
-        <div>
-          <label>Teléfono</label>
-          <input type="text" name="telefono" placeholder="987654321" maxlength="15">
-        </div>
-      </div>
+      <label>Email</label>
+      <input type="email" name="email" placeholder="ejemplo@correo.com" required>
 
-      <label>Correo electrónico</label>
-      <input type="email" name="email" placeholder="cliente@email.com" maxlength="100">
+      <label>Teléfono <small style="color:#aaa">(9 dígitos)</small></label>
+      <input type="text" name="telefono" id="telefonoAdd"
+             placeholder="999999999"
+             maxlength="9" pattern="[0-9]{9}"
+             title="El teléfono debe tener exactamente 9 dígitos" required>
+
+      <label>DNI <small style="color:#aaa">(8 dígitos)</small></label>
+      <input type="text" name="documento" id="documentoAdd"
+             placeholder="12345678"
+             maxlength="8" pattern="[0-9]{8}"
+             title="El DNI debe tener exactamente 8 dígitos" required>
+
+      <input type="hidden" name="fecha_registro" value="<%= LocalDate.now() %>">
 
       <div class="modal-buttons">
-        <button type="submit" class="btn-save"><i class="fa-solid fa-check"></i> Guardar</button>
-        <button type="button" class="btn-cancel" onclick="cerrarModalCliente()">Cancelar</button>
+        <button type="submit" class="btn-save">Agregar</button>
+        <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- MODAL: EDITAR CLIENTE -->
-<div class="modal-overlay" id="modalEditarCliente">
-  <div class="modal" style="width:480px;">
-    <form method="POST" action="ServletEditarCliente">
-      <h2><i class="fa-solid fa-user-pen" style="color:#007bff;"></i> Editar Cliente</h2>
-      <input type="hidden" name="id" id="editClienteId">
+<!-- Modal: Editar Cliente -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <form method="POST" action="EditarCliente" onsubmit="return validarFormCliente('editModal')">
+      <h2>Editar Cliente</h2>
+      <input type="hidden" name="id" id="editId">
 
-      <label>Nombre completo *</label>
-      <input type="text" name="nombre" id="editClienteNombre" required maxlength="150">
+      <label>Nombre</label>
+      <input type="text" name="nombre" id="editNombre" required>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label>DNI / Documento</label>
-          <input type="text" name="documento" id="editClienteDoc" maxlength="20">
-        </div>
-        <div>
-          <label>Teléfono</label>
-          <input type="text" name="telefono" id="editClienteTel" maxlength="15">
-        </div>
-      </div>
+      <label>Email</label>
+      <input type="email" name="email" id="editEmail" required>
 
-      <label>Correo electrónico</label>
-      <input type="email" name="email" id="editClienteEmail" maxlength="100">
+      <label>Teléfono <small style="color:#aaa">(9 dígitos)</small></label>
+      <input type="text" name="telefono" id="editTelefono"
+             maxlength="9" pattern="[0-9]{9}"
+             title="El teléfono debe tener exactamente 9 dígitos" required>
+
+      <label>DNI <small style="color:#aaa">(8 dígitos)</small></label>
+      <input type="text" name="documento" id="editDocumento"
+             maxlength="8" pattern="[0-9]{8}"
+             title="El DNI debe tener exactamente 8 dígitos" required>
 
       <div class="modal-buttons">
-        <button type="submit" class="btn-save"><i class="fa-solid fa-check"></i> Actualizar</button>
-        <button type="button" class="btn-cancel" onclick="cerrarModalEditarCliente()">Cancelar</button>
+        <button type="submit" class="btn-save">Guardar</button>
+        <button type="button" class="btn-cancel" onclick="cerrarModalEditar()">Cancelar</button>
       </div>
     </form>
   </div>
 </div>
-
-<!-- FORM OCULTO: ELIMINAR -->
-<form id="formEliminarCliente" method="POST" action="ServletEliminarCliente" style="display:none;">
-  <input type="hidden" name="id" id="eliminarClienteId">
-</form>
+<% } %>
 
 <script>
-function abrirModalCliente()       { document.getElementById("modalCliente").style.display = "flex"; }
-function cerrarModalCliente()      { document.getElementById("modalCliente").style.display = "none"; }
-function cerrarModalEditarCliente(){ document.getElementById("modalEditarCliente").style.display = "none"; }
-
-document.getElementById("modalCliente").addEventListener("click", function(e) {
-  if (e.target === this) cerrarModalCliente();
-});
-document.getElementById("modalEditarCliente").addEventListener("click", function(e) {
-  if (e.target === this) cerrarModalEditarCliente();
-});
-
-function abrirModalEditarCliente(id, nombre, email, telefono, documento) {
-  document.getElementById("editClienteId").value       = id;
-  document.getElementById("editClienteNombre").value   = nombre;
-  document.getElementById("editClienteEmail").value    = email !== "null" ? email : "";
-  document.getElementById("editClienteTel").value      = telefono !== "null" ? telefono : "";
-  document.getElementById("editClienteDoc").value      = documento !== "null" ? documento : "";
-  document.getElementById("modalEditarCliente").style.display = "flex";
-}
-
-function confirmarEliminarCliente(id, nombre) {
-  if (confirm("¿Eliminar al cliente " + nombre + "?\nEsta acción no se puede deshacer.")) {
-    document.getElementById("eliminarClienteId").value = id;
-    document.getElementById("formEliminarCliente").submit();
+  <% if (puedeGestionar) { %>
+  function abrirModal() {
+    document.getElementById("customerModal").style.display = "flex";
   }
-}
-
-function filtrarClientes() {
-  const q = document.getElementById("searchCliente").value.toLowerCase();
-  const cards = document.querySelectorAll("#clientesGrid .user-card");
-  let visibles = 0;
-  cards.forEach(card => {
-    const match = card.dataset.nombre.includes(q)
-                || card.dataset.email.includes(q)
-                || card.dataset.doc.includes(q);
-    card.style.display = match ? "" : "none";
-    if (match) visibles++;
+  function cerrarModal() {
+    document.getElementById("customerModal").style.display = "none";
+  }
+  document.getElementById("customerModal").addEventListener("click", function(e) {
+    if (e.target === this) cerrarModal();
   });
-  document.getElementById("sinClientes").style.display = visibles === 0 ? "block" : "none";
-}
+
+  function abrirModalEditar(id, nombre, email, telefono, documento) {
+    document.getElementById("editId").value        = id;
+    document.getElementById("editNombre").value    = nombre;
+    document.getElementById("editEmail").value     = email;
+    document.getElementById("editTelefono").value  = telefono;
+    document.getElementById("editDocumento").value = documento;
+    document.getElementById("editModal").style.display = "flex";
+  }
+  function cerrarModalEditar() {
+    document.getElementById("editModal").style.display = "none";
+  }
+  document.getElementById("editModal").addEventListener("click", function(e) {
+    if (e.target === this) cerrarModalEditar();
+  });
+
+  function validarFormCliente(modalId) {
+    var modal    = document.getElementById(modalId);
+    var tel      = modal.querySelector("[name='telefono']");
+    var doc      = modal.querySelector("[name='documento']");
+    if (!/^[0-9]{9}$/.test(tel.value)) {
+      alert("El teléfono debe tener exactamente 9 dígitos numéricos.");
+      tel.focus(); return false;
+    }
+    if (!/^[0-9]{8}$/.test(doc.value)) {
+      alert("El DNI debe tener exactamente 8 dígitos numéricos.");
+      doc.focus(); return false;
+    }
+    return true;
+  }
+
+  // Solo permitir números en campos DNI y teléfono
+  document.querySelectorAll("[name='telefono'],[name='documento']").forEach(function(inp) {
+    inp.addEventListener("input", function() {
+      this.value = this.value.replace(/[^0-9]/g, "");
+    });
+  });
+  <% } %>
+
+  function filtrarClientes() {
+    var texto    = document.getElementById("searchCustomer").value.toLowerCase().trim();
+    var cards    = document.querySelectorAll("#usersGrid .user-card");
+    var visibles = 0;
+    cards.forEach(function(card) {
+      var nombre    = card.dataset.nombre    || "";
+      var documento = card.dataset.documento || "";
+      var match     = nombre.includes(texto) || documento.includes(texto);
+      card.style.display = match ? "block" : "none";
+      if (match) visibles++;
+    });
+    document.getElementById("sinResultados").style.display = visibles === 0 ? "block" : "none";
+  }
 </script>

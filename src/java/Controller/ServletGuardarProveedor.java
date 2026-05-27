@@ -1,5 +1,6 @@
 package Controller;
 
+import Entity.Proveedor;
 import Model.ModelProveedor;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,12 +15,13 @@ public class ServletGuardarProveedor extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         try {
-            String razonSocial = request.getParameter("razonSocial");
-            String ruc         = request.getParameter("ruc");
-            String contacto    = request.getParameter("contacto");
-            String telefono    = request.getParameter("telefono");
-            String email       = request.getParameter("email");
-            new ModelProveedor().saveProveedor(razonSocial, ruc, contacto, telefono, email);
+            Proveedor p = new Proveedor();
+            p.setRazon_social(request.getParameter("razonSocial"));
+            p.setRuc(request.getParameter("ruc"));
+            p.setContacto(request.getParameter("contacto"));
+            p.setTelefono(request.getParameter("telefono"));
+            p.setEmail(request.getParameter("email"));
+            new ModelProveedor().saveProveedor(p);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,229 +1,225 @@
 <%@page pageEncoding="UTF-8"%>
-<%@page import="java.util.HashMap,java.util.ArrayList"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="java.util.ArrayList"%>
 
 <%
   ArrayList<HashMap<String,String>> proveedores =
-      (ArrayList<HashMap<String,String>>) request.getAttribute("listaProveedores");
-  if (proveedores == null) proveedores = new ArrayList<>();
+      (ArrayList<HashMap<String,String>>) request.getAttribute("proveedores");
+
+  int total = proveedores != null ? proveedores.size() : 0;
+  // Menú ya restringe a Admin/Gerente — aquí igual como defensa interna
+  boolean puedeGestionarProv = esAdmin || esGerente;
 %>
 
-<!-- HEADER -->
+<% if (!puedeGestionarProv) { %>
+<div style="text-align:center;padding:60px;color:#aaa">
+  <i class="fa-solid fa-lock" style="font-size:3rem;margin-bottom:12px"></i>
+  <p>No tienes permiso para acceder a este módulo.</p>
+</div>
+<% return; } %>
+
 <div class="users-header">
   <h2 class="gradient-text">
     <i class="fa-solid fa-truck"></i> Gestión de Proveedores
   </h2>
-  <button class="btn-add-user" onclick="abrirModalProveedor()">
-    <i class="fa-solid fa-plus"></i> Nuevo Proveedor
+  <button class="btn-add-user" onclick="abrirModal()">
+    <i class="fa-solid fa-plus"></i> Agregar Proveedor
   </button>
 </div>
 
-<!-- STATS -->
 <div class="users-stats">
   <div class="stat-card total">
-    <p><i class="fa-solid fa-building"></i> Total Proveedores</p>
-    <h3><%= proveedores.size() %></h3>
-  </div>
-  <div class="stat-card active">
-    <p><i class="fa-solid fa-id-badge"></i> Con RUC</p>
-    <h3><%
-      int conRuc = 0;
-      for (HashMap<String,String> p : proveedores)
-        if (p.get("ruc") != null && !p.get("ruc").isEmpty()) conRuc++;
-      out.print(conRuc);
-    %></h3>
-  </div>
-  <div class="stat-card inactive">
-    <p><i class="fa-solid fa-envelope"></i> Con Email</p>
-    <h3><%
-      int conEmail = 0;
-      for (HashMap<String,String> p : proveedores)
-        if (p.get("email") != null && !p.get("email").isEmpty()) conEmail++;
-      out.print(conEmail);
-    %></h3>
+    <p>Total de Proveedores</p>
+    <h3><%= total %></h3>
   </div>
 </div>
 
-<!-- FILTROS -->
 <div class="users-filters">
   <div class="search-box">
     <i class="fa fa-search"></i>
-    <input type="text" id="searchProveedor" placeholder="Buscar por razón social, RUC o contacto..." oninput="filtrarProveedores()">
+    <input type="text" id="searchSupplier" placeholder="Buscar por razón social o RUC..." oninput="filtrarProveedores()">
   </div>
 </div>
 
-<!-- GRID DE TARJETAS -->
-<div class="users-grid" id="proveedoresGrid">
-  <% if (proveedores.isEmpty()) { %>
-    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#999;">
-      <i class="fa-solid fa-inbox" style="font-size:48px;display:block;margin-bottom:16px;opacity:.4;"></i>
-      <p>No hay proveedores registrados aún.</p>
-    </div>
-  <% } else { for (HashMap<String,String> p : proveedores) {
-       String letra = (p.get("nombre") != null && !p.get("nombre").isEmpty())
-                      ? String.valueOf(p.get("nombre").charAt(0)).toUpperCase() : "?";
+<div class="users-grid" id="usersGrid">
+  <% if (proveedores != null) {
+       for (HashMap<String,String> u : proveedores) {
+         String letra = u.get("razon_social") != null && !u.get("razon_social").isEmpty()
+                        ? String.valueOf(u.get("razon_social").charAt(0)).toUpperCase() : "?";
   %>
-    <div class="user-card"
-         data-nombre="<%= p.get("nombre") != null ? p.get("nombre").toLowerCase() : "" %>"
-         data-ruc="<%= p.get("ruc") != null ? p.get("ruc") : "" %>"
-         data-contacto="<%= p.get("contacto") != null ? p.get("contacto").toLowerCase() : "" %>">
+  <div class="user-card"
+       data-razonsocial="<%= u.get("razon_social").toLowerCase() %>"
+       data-ruc="<%= u.get("ruc") %>">
 
-      <div class="user-top">
-        <div class="avatar" style="background:linear-gradient(90deg,#ff9800,#f44336);">
-          <%= letra %>
-        </div>
-        <div class="user-info" style="flex:1;">
-          <strong><%= p.get("nombre") %></strong>
-          <small style="color:#888;">RUC: <%= p.get("ruc") != null ? p.get("ruc") : "—" %></small>
-        </div>
+    <div class="user-top">
+      <div class="avatar"><%= letra %></div>
+      <div class="user-info">
+        <strong><%= u.get("razon_social") %></strong>
       </div>
+    </div>
 
-      <div class="user-info" style="margin-top:8px;">
-        <p><i class="fa-solid fa-user-tie"></i> <%= p.get("contacto") != null ? p.get("contacto") : "—" %></p>
-        <p><i class="fa-solid fa-phone"></i> <%= p.get("telefono") != null ? p.get("telefono") : "—" %></p>
-        <p><i class="fa-solid fa-envelope"></i> <%= p.get("email") != null ? p.get("email") : "—" %></p>
-      </div>
+    <div class="user-info" style="margin-top:8px">
+      <p><i class="fa-solid fa-file-invoice"></i> RUC: <%= u.get("ruc") %></p>
+      <p><i class="fa-solid fa-user-tie"></i> <%= u.get("contacto") %></p>
+      <p><i class="fa-solid fa-phone"></i> <%= u.get("telefono") %></p>
+      <p><i class="fa-solid fa-envelope"></i> <%= u.get("email") %></p>
+    </div>
 
-      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-        <button onclick="abrirModalEditarProveedor('<%= p.get("id") %>','<%= p.get("nombre") %>','<%= p.get("ruc") %>','<%= p.get("contacto") %>','<%= p.get("telefono") %>','<%= p.get("email") %>')"
-                style="background:none;border:1px solid #007bff;color:#007bff;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
-          <i class="fa-solid fa-pen"></i> Editar
-        </button>
-        <button onclick="confirmarEliminarProveedor('<%= p.get("id") %>','<%= p.get("nombre") %>')"
-                style="background:none;border:1px solid #E24B4A;color:#E24B4A;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button onclick="abrirModalEditar('<%= u.get("id") %>','<%= u.get("razon_social") %>','<%= u.get("ruc") %>','<%= u.get("contacto") %>','<%= u.get("telefono") %>','<%= u.get("email") %>')"
+              style="background:none;border:1px solid #007bff;color:#007bff;
+                     padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
+        <i class="fa-solid fa-pen"></i> Editar
+      </button>
+
+      <form method="POST" action="EliminarProveedor" style="display:inline"
+            onsubmit="return confirm('¿Eliminar a <%= u.get("razon_social") %>?')">
+        <input type="hidden" name="id" value="<%= u.get("id") %>">
+        <button type="submit"
+                style="background:none;border:1px solid #E24B4A;color:#E24B4A;
+                       padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px;">
           <i class="fa-solid fa-trash"></i> Eliminar
         </button>
-      </div>
+      </form>
     </div>
-  <% }} %>
+  </div>
+  <% } } %>
 </div>
 
-<p id="sinProveedores" style="display:none;text-align:center;color:#888;margin-top:30px;">No se encontraron proveedores.</p>
+<div id="sinResultados" style="display:none;text-align:center;color:#aaa;padding:40px">
+  <i class="fa-solid fa-magnifying-glass" style="font-size:2rem;margin-bottom:8px"></i>
+  <p>No se encontraron proveedores</p>
+</div>
 
-<!-- MODAL: AGREGAR PROVEEDOR -->
-<div class="modal-overlay" id="modalProveedor">
-  <div class="modal" style="width:500px;">
-    <form method="POST" action="ServletGuardarProveedor">
-      <h2><i class="fa-solid fa-building-circle-arrow-right" style="color:#007bff;"></i> Nuevo Proveedor</h2>
+<!-- Modal: Agregar Proveedor -->
+<div class="modal-overlay" id="supplierModal">
+  <div class="modal">
+    <form method="POST" action="ServletMantenimientoProveedor" onsubmit="return validarFormProveedor('supplierModal')">
+      <h2>Agregar Proveedor</h2>
 
-      <label>Razón Social *</label>
-      <input type="text" name="razonSocial" placeholder="Ej: Samsung Perú S.A.C." required maxlength="150">
+      <label>Razón Social</label>
+      <input type="text" name="razon_social" placeholder="Razón social de la empresa" required>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label>RUC</label>
-          <input type="text" name="ruc" placeholder="20512345678" maxlength="11"
-                 pattern="[0-9]{11}" title="El RUC debe tener 11 dígitos">
-        </div>
-        <div>
-          <label>Contacto</label>
-          <input type="text" name="contacto" placeholder="Nombre del responsable" maxlength="100">
-        </div>
-      </div>
+      <label>RUC <small style="color:#aaa">(11 dígitos)</small></label>
+      <input type="text" name="ruc" id="rucAdd"
+             placeholder="20123456789"
+             maxlength="11" pattern="[0-9]{11}"
+             title="El RUC debe tener exactamente 11 dígitos" required>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label>Teléfono</label>
-          <input type="text" name="telefono" placeholder="014567890" maxlength="15">
-        </div>
-        <div>
-          <label>Email</label>
-          <input type="email" name="email" placeholder="proveedor@empresa.com" maxlength="100">
-        </div>
-      </div>
+      <label>Contacto</label>
+      <input type="text" name="contacto" placeholder="Nombre del contacto" required>
+
+      <label>Teléfono <small style="color:#aaa">(9 dígitos)</small></label>
+      <input type="text" name="telefono" id="telefonoAddP"
+             placeholder="999999999"
+             maxlength="9" pattern="[0-9]{9}"
+             title="El teléfono debe tener exactamente 9 dígitos" required>
+
+      <label>Email</label>
+      <input type="email" name="email" placeholder="contacto@empresa.com" required>
 
       <div class="modal-buttons">
-        <button type="submit" class="btn-save"><i class="fa-solid fa-check"></i> Guardar</button>
-        <button type="button" class="btn-cancel" onclick="cerrarModalProveedor()">Cancelar</button>
+        <button type="submit" class="btn-save">Agregar</button>
+        <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- MODAL: EDITAR PROVEEDOR -->
-<div class="modal-overlay" id="modalEditarProveedor">
-  <div class="modal" style="width:500px;">
-    <form method="POST" action="ServletEditarProveedor">
-      <h2><i class="fa-solid fa-building-circle-arrow-right" style="color:#007bff;"></i> Editar Proveedor</h2>
-      <input type="hidden" name="id" id="editProveedorId">
+<!-- Modal: Editar Proveedor -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <form method="POST" action="EditarProveedor" onsubmit="return validarFormProveedor('editModal')">
+      <h2>Editar Proveedor</h2>
+      <input type="hidden" name="id" id="editId">
 
-      <label>Razón Social *</label>
-      <input type="text" name="razonSocial" id="editProveedorNombre" required maxlength="150">
+      <label>Razón Social</label>
+      <input type="text" name="razon_social" id="editRazonSocial" required>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label>RUC</label>
-          <input type="text" name="ruc" id="editProveedorRuc" maxlength="11">
-        </div>
-        <div>
-          <label>Contacto</label>
-          <input type="text" name="contacto" id="editProveedorContacto" maxlength="100">
-        </div>
-      </div>
+      <label>RUC <small style="color:#aaa">(11 dígitos)</small></label>
+      <input type="text" name="ruc" id="editRuc"
+             maxlength="11" pattern="[0-9]{11}"
+             title="El RUC debe tener exactamente 11 dígitos" required>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div>
-          <label>Teléfono</label>
-          <input type="text" name="telefono" id="editProveedorTel" maxlength="15">
-        </div>
-        <div>
-          <label>Email</label>
-          <input type="email" name="email" id="editProveedorEmail" maxlength="100">
-        </div>
-      </div>
+      <label>Contacto</label>
+      <input type="text" name="contacto" id="editContacto" required>
+
+      <label>Teléfono <small style="color:#aaa">(9 dígitos)</small></label>
+      <input type="text" name="telefono" id="editTelefono"
+             maxlength="9" pattern="[0-9]{9}"
+             title="El teléfono debe tener exactamente 9 dígitos" required>
+
+      <label>Email</label>
+      <input type="email" name="email" id="editEmail" required>
 
       <div class="modal-buttons">
-        <button type="submit" class="btn-save"><i class="fa-solid fa-check"></i> Actualizar</button>
-        <button type="button" class="btn-cancel" onclick="cerrarModalEditarProveedor()">Cancelar</button>
+        <button type="submit" class="btn-save">Guardar</button>
+        <button type="button" class="btn-cancel" onclick="cerrarModalEditar()">Cancelar</button>
       </div>
     </form>
   </div>
 </div>
-
-<!-- FORM OCULTO: ELIMINAR -->
-<form id="formEliminarProveedor" method="POST" action="ServletEliminarProveedor" style="display:none;">
-  <input type="hidden" name="id" id="eliminarProveedorId">
-</form>
 
 <script>
-function abrirModalProveedor()        { document.getElementById("modalProveedor").style.display = "flex"; }
-function cerrarModalProveedor()       { document.getElementById("modalProveedor").style.display = "none"; }
-function cerrarModalEditarProveedor() { document.getElementById("modalEditarProveedor").style.display = "none"; }
-
-document.getElementById("modalProveedor").addEventListener("click", function(e) {
-  if (e.target === this) cerrarModalProveedor();
-});
-document.getElementById("modalEditarProveedor").addEventListener("click", function(e) {
-  if (e.target === this) cerrarModalEditarProveedor();
-});
-
-function abrirModalEditarProveedor(id, nombre, ruc, contacto, telefono, email) {
-  document.getElementById("editProveedorId").value       = id;
-  document.getElementById("editProveedorNombre").value   = nombre;
-  document.getElementById("editProveedorRuc").value      = ruc !== "null" ? ruc : "";
-  document.getElementById("editProveedorContacto").value = contacto !== "null" ? contacto : "";
-  document.getElementById("editProveedorTel").value      = telefono !== "null" ? telefono : "";
-  document.getElementById("editProveedorEmail").value    = email !== "null" ? email : "";
-  document.getElementById("modalEditarProveedor").style.display = "flex";
-}
-
-function confirmarEliminarProveedor(id, nombre) {
-  if (confirm("¿Eliminar al proveedor " + nombre + "?\nEsta acción no se puede deshacer.")) {
-    document.getElementById("eliminarProveedorId").value = id;
-    document.getElementById("formEliminarProveedor").submit();
+  function abrirModal() {
+    document.getElementById("supplierModal").style.display = "flex";
   }
-}
-
-function filtrarProveedores() {
-  const q = document.getElementById("searchProveedor").value.toLowerCase();
-  const cards = document.querySelectorAll("#proveedoresGrid .user-card");
-  let visibles = 0;
-  cards.forEach(card => {
-    const match = card.dataset.nombre.includes(q)
-                || card.dataset.ruc.includes(q)
-                || card.dataset.contacto.includes(q);
-    card.style.display = match ? "" : "none";
-    if (match) visibles++;
+  function cerrarModal() {
+    document.getElementById("supplierModal").style.display = "none";
+  }
+  document.getElementById("supplierModal").addEventListener("click", function(e) {
+    if (e.target === this) cerrarModal();
   });
-  document.getElementById("sinProveedores").style.display = visibles === 0 ? "block" : "none";
-}
+
+  function abrirModalEditar(id, razon_social, ruc, contacto, telefono, email) {
+    document.getElementById("editId").value           = id;
+    document.getElementById("editRazonSocial").value  = razon_social;
+    document.getElementById("editRuc").value          = ruc;
+    document.getElementById("editContacto").value     = contacto;
+    document.getElementById("editTelefono").value     = telefono;
+    document.getElementById("editEmail").value        = email;
+    document.getElementById("editModal").style.display = "flex";
+  }
+  function cerrarModalEditar() {
+    document.getElementById("editModal").style.display = "none";
+  }
+  document.getElementById("editModal").addEventListener("click", function(e) {
+    if (e.target === this) cerrarModalEditar();
+  });
+
+  function validarFormProveedor(modalId) {
+    var modal = document.getElementById(modalId);
+    var ruc   = modal.querySelector("[name='ruc']");
+    var tel   = modal.querySelector("[name='telefono']");
+    if (!/^[0-9]{11}$/.test(ruc.value)) {
+      alert("El RUC debe tener exactamente 11 dígitos numéricos.");
+      ruc.focus(); return false;
+    }
+    if (!/^[0-9]{9}$/.test(tel.value)) {
+      alert("El teléfono debe tener exactamente 9 dígitos numéricos.");
+      tel.focus(); return false;
+    }
+    return true;
+  }
+
+  // Solo permitir números en campos RUC y teléfono
+  document.querySelectorAll("[name='ruc'],[name='telefono']").forEach(function(inp) {
+    inp.addEventListener("input", function() {
+      this.value = this.value.replace(/[^0-9]/g, "");
+    });
+  });
+
+  function filtrarProveedores() {
+    var texto    = document.getElementById("searchSupplier").value.toLowerCase().trim();
+    var cards    = document.querySelectorAll("#usersGrid .user-card");
+    var visibles = 0;
+    cards.forEach(function(card) {
+      var razonSocial = card.dataset.razonsocial || "";
+      var ruc         = card.dataset.ruc         || "";
+      var match       = razonSocial.includes(texto) || ruc.includes(texto);
+      card.style.display = match ? "block" : "none";
+      if (match) visibles++;
+    });
+    document.getElementById("sinResultados").style.display = visibles === 0 ? "block" : "none";
+  }
 </script>
