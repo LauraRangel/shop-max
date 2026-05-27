@@ -31,6 +31,8 @@ public class ServletLogin extends HttpServlet {
             session.setAttribute("id_usuario", usuario.get("id"));
             session.setAttribute("nombre",     usuario.get("nombre"));
             session.setAttribute("rol",        usuario.get("rol"));
+            String idTienda = usuario.get("idTienda");
+            session.setAttribute("id_tienda",  idTienda != null ? Integer.parseInt(idTienda) : 1);
             response.sendRedirect("dashboard");
         } else {
             request.setAttribute("error", "Correo o contraseña incorrectos");

@@ -176,7 +176,7 @@ CREATE TABLE `venta` (
   `ID_TIENDA`  int(11)        NOT NULL,
   `FECHA`      datetime       DEFAULT current_timestamp(),
   `TOTAL`      decimal(10,2)  DEFAULT 0.00,
-  `ESTADO`     varchar(20)    DEFAULT 'activa' COMMENT 'activa / anulada',
+  `ESTADO`     varchar(20)    DEFAULT 'completada' COMMENT 'completada / anulada',
   `TIPO_PAGO`  varchar(20)    DEFAULT NULL     COMMENT 'efectivo / tarjeta',
   PRIMARY KEY (`ID_VENTA`),
   CONSTRAINT `venta_ibfk_1` FOREIGN KEY (`ID_CLIENTE`) REFERENCES `cliente` (`ID_CLIENTE`),
@@ -185,8 +185,8 @@ CREATE TABLE `venta` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `venta` VALUES
-(1, 1, 1, 1, '2026-04-20 10:30:00', 949.80, 'activa',  'efectivo'),
-(2, 2, 4, 2, '2026-04-21 14:15:00',  89.90, 'activa',  'tarjeta'),
+(1, 1, 1, 1, '2026-04-20 10:30:00', 949.80, 'completada',  'efectivo'),
+(2, 2, 4, 2, '2026-04-21 14:15:00',  89.90, 'completada',  'tarjeta'),
 (3, 3, 1, 1, '2026-04-22 09:00:00', 259.80, 'anulada', 'efectivo');
 
 -- --------------------------------------------------------
@@ -270,15 +270,22 @@ INSERT INTO `orden_compra` VALUES
 -- 14. DETALLE_ORDEN
 -- --------------------------------------------------------
 CREATE TABLE `detalle_orden` (
-  `ID_DETALLE`    int(11)       NOT NULL AUTO_INCREMENT,
-  `ID_ORDEN`      int(11)       NOT NULL,
-  `ID_PRODUCTO`   int(11)       NOT NULL,
-  `CANTIDAD`      int(11)       NOT NULL,
-  `PRECIO_COMPRA` decimal(10,2) DEFAULT NULL,
+  `ID_DETALLE`         int(11)       NOT NULL AUTO_INCREMENT,
+  `ID_ORDEN`           int(11)       NOT NULL,
+  `ID_PRODUCTO`        int(11)       NOT NULL,
+  `CANTIDAD`           int(11)       NOT NULL,
+  `PRECIO_COMPRA`      decimal(10,2) DEFAULT NULL,
+  `CANTIDAD_RECIBIDA`  int(11)       NOT NULL DEFAULT 0,
   PRIMARY KEY (`ID_DETALLE`),
   CONSTRAINT `do_ibfk_1` FOREIGN KEY (`ID_ORDEN`)    REFERENCES `orden_compra`(`ID_ORDEN`),
   CONSTRAINT `do_ibfk_2` FOREIGN KEY (`ID_PRODUCTO`) REFERENCES `producto`    (`ID_PRODUCTO`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Si ya tienes la tabla creada, ejecuta en XAMPP:
+-- ALTER TABLE detalle_orden ADD COLUMN CANTIDAD_RECIBIDA INT NOT NULL DEFAULT 0;
+-- UPDATE orden_compra SET ESTADO='recibida' WHERE ESTADO='recibida'; -- (sin cambio, solo referencia)
+-- UPDATE detalle_orden do JOIN orden_compra oc ON do.ID_ORDEN = oc.ID_ORDEN
+--   SET do.CANTIDAD_RECIBIDA = do.CANTIDAD WHERE oc.ESTADO = 'recibida';
 
 INSERT INTO `detalle_orden` VALUES
 (1, 1, 1, 20, 599.90),

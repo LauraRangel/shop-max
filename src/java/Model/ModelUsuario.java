@@ -91,7 +91,7 @@ public class ModelUsuario {
         ResultSet rs = null;
 
         try {
-            String sql = "SELECT u.ID_USUARIO, u.NOMBRE, r.NOMBRE AS ROL "
+            String sql = "SELECT u.ID_USUARIO, u.NOMBRE, r.NOMBRE AS ROL, u.ID_TIENDA "
                        + "FROM usuario u JOIN rol r ON u.ID_ROL = r.ID_ROL "
                        + "WHERE u.EMAIL = ? AND u.PASSWORD_HASH = ? AND u.ACTIVO = 1";
 
@@ -103,9 +103,10 @@ public class ModelUsuario {
 
             if (rs.next()) {
                 HashMap<String, String> map = new HashMap<>();
-                map.put("id",     rs.getString("ID_USUARIO"));
-                map.put("nombre", rs.getString("NOMBRE"));
-                map.put("rol",    rs.getString("ROL"));
+                map.put("id",       rs.getString("ID_USUARIO"));
+                map.put("nombre",   rs.getString("NOMBRE"));
+                map.put("rol",      rs.getString("ROL"));
+                map.put("idTienda", rs.getString("ID_TIENDA"));
                 return map;
             }
 

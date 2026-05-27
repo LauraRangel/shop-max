@@ -107,17 +107,23 @@
         </button>
         <span class="topbar-title"><%= tituloActual %></span>
       </div>
-      <div class="user">
-        <div>
-          <strong><%= session.getAttribute("nombre") %></strong>
-          <p><%= session.getAttribute("rol") %></p>
+      <div style="display:flex;align-items:center;gap:30px">
+        <div style="text-align:right;font-size:12px;color:#888">
+          <div id="time" style="font-weight:600;color:#333"></div>
+          <div id="date" style="font-size:11px"></div>
         </div>
-        <a href="dashboard?mod=perfil" title="Configuración"
-           style="text-decoration:none;color:<%= "perfil".equals(mod) ? "#7b2ff7" : "#aaa" %>">
-          <i class="fa-solid fa-gear" style="font-size:18px;margin:0 8px;"></i>
-        </a>
-        <div class="avatar">
-          <%= session.getAttribute("nombre").toString().charAt(0) %>
+        <div class="user">
+          <div>
+            <strong><%= session.getAttribute("nombre") %></strong>
+            <p><%= session.getAttribute("rol") %></p>
+          </div>
+          <a href="dashboard?mod=perfil" title="Configuración"
+             style="text-decoration:none;color:<%= "perfil".equals(mod) ? "#7b2ff7" : "#aaa" %>">
+            <i class="fa-solid fa-gear" style="font-size:18px;margin:0 8px;"></i>
+          </a>
+          <div class="avatar">
+            <%= session.getAttribute("nombre").toString().charAt(0) %>
+          </div>
         </div>
       </div>
     </div>

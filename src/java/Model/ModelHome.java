@@ -19,7 +19,7 @@ public class ModelHome {
             // ventas de hoy
             ps = cn.prepareStatement(
                 "SELECT COALESCE(SUM(TOTAL), 0) AS total, COUNT(*) AS transacciones " +
-                "FROM venta WHERE DATE(FECHA) = CURDATE() AND ESTADO = 'activa'"
+                "FROM venta WHERE DATE(FECHA) = CURDATE() AND ESTADO = 'completada'"
             );
             rs = ps.executeQuery();
             if (rs.next()) {
