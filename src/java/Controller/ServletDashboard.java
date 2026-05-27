@@ -41,6 +41,8 @@ public class ServletDashboard extends HttpServlet {
         if (mod == null) mod = "home";
 
         // datos siempre necesarios (sidebar, usuarios)
+        request.setAttribute("proveedores",    new ModelProveedor().listarProveedores());
+        request.setAttribute("clientes",    new ModelCliente().listarClientes());
         request.setAttribute("roles",    new ModelRol().listarRoles());
         request.setAttribute("tiendas",  new ModelTienda().listarTiendas());
         request.setAttribute("usuarios", new ModelUsuario().listarUsuarios());
