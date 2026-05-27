@@ -187,7 +187,7 @@
       <select name="idProveedor" required>
         <option value="">-- Seleccione proveedor --</option>
         <% for (HashMap<String,String> prov : proveedores) { %>
-          <option value="<%= prov.get("id") %>"><%= prov.get("nombre") %></option>
+          <option value="<%= prov.get("id") %>"><%= prov.get("razon_social") %></option>
         <% } %>
       </select>
 
