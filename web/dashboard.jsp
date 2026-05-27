@@ -37,7 +37,7 @@
       <a href="dashboard" class="menu-item <%= "home".equals(mod) ? "active" : "" %>">
         <i class="fa-solid fa-chart-line"></i> Dashboard
       </a>
-      <% if (esAdmin || esGerente || esCajero) { %>
+      <% if (esAdmin || esGerente || esCajero || esVendedor) { %>
       <a href="dashboard?mod=ventas" class="menu-item <%= "ventas".equals(mod) ? "active" : "" %>">
         <i class="fa-solid fa-cart-shopping"></i> Ventas
       </a>

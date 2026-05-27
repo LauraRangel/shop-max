@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.time.LocalDate;
 
 @WebServlet("/reportes")
 public class ServletReportes extends HttpServlet {
@@ -19,12 +20,22 @@ public class ServletReportes extends HttpServlet {
             return;
         }
 
+        String desde = request.getParameter("desde");
+        String hasta = request.getParameter("hasta");
+        if (desde == null || desde.isEmpty()) desde = LocalDate.now().withDayOfMonth(1).toString();
+        if (hasta == null || hasta.isEmpty()) hasta = LocalDate.now().toString();
+
         ModelReporte model = new ModelReporte();
+        request.setAttribute("ventasPorMes",    model.ventasPorMes());
+        request.setAttribute("productosTop",    model.productosTop(desde, hasta));
+        request.setAttribute("estadisticas",    model.estadisticas());
+        request.setAttribute("kpis",            model.getKpis(desde, hasta));
+        request.setAttribute("ventasRecientes", model.getVentasRecientes(desde, hasta));
+        request.setAttribute("stockCritico",    model.getStockCritico());
+        request.setAttribute("ventasPorPago",   model.getVentasPorPago(desde, hasta));
+        request.setAttribute("filtroDesde",     desde);
+        request.setAttribute("filtroHasta",     hasta);
 
-        request.setAttribute("ventasPorMes", model.ventasPorMes());
-        request.setAttribute("productosTop", model.productosTop());
-        request.setAttribute("estadisticas", model.estadisticas());
-
-        request.getRequestDispatcher("dashboard").forward(request, response);
+        response.sendRedirect("dashboard?mod=reportes&desde=" + desde + "&hasta=" + hasta);
     }
 }

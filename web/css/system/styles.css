@@ -69,14 +69,20 @@
   background:none;
   border:none;
   color:#ccc;
-  text-align:left;
-  padding:10px;
+  display:flex;
+  align-items:center;
+  width:100%;
+  padding:10px 14px;
   cursor:pointer;
   border-radius:10px;
   transition:0.3s;
+  text-decoration:none;
 }
 
 .menu-item i{
+  width:18px;
+  text-align:center;
+  flex-shrink:0;
   margin-right:10px;
 }
 
